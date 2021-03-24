@@ -686,7 +686,7 @@ func (w *Worker) getEthereumTypeAddressBalances(addrDesc bchain.AddressDescripto
 		if err != nil {
 			return nil, nil, nil, 0, 0, 0, errors.Annotatef(err, "EthereumTypeGetNonce %v", addrDesc)
 		}
-		if details > AccountDetailsBasic {
+		if details > AccountDetailsTxHistory {
 			tokens = make([]Token, len(ca.Contracts))
 			var j int
 			for i, c := range ca.Contracts {
