@@ -629,7 +629,7 @@ func (w *Worker) getEthereumToken(index int, addrDesc, contract bchain.AddressDe
 		validContract = false
 	}
 	// do not read contract balances etc in case of Basic option
-	if details >= AccountDetailsTokenBalances && details < AccountDetailsTxHistory && validContract {
+	if details >= AccountDetailsTokenBalances && validContract {
 		b, err = w.chain.EthereumTypeGetErc20ContractBalance(addrDesc, contract)
 		if err != nil {
 			// return nil, nil, nil, errors.Annotatef(err, "EthereumTypeGetErc20ContractBalance %v %v", addrDesc, c.Contract)
@@ -697,21 +697,25 @@ func (w *Worker) getEthereumTypeAddressBalances(addrDesc bchain.AddressDescripto
 					// filter only transactions of this contract
 					filter.Vout = i + 1
 				}
-				t, err := w.getEthereumToken(i+1, addrDesc, c.Contract, details, int(c.Txs))
-				if err != nil {
-					return nil, nil, nil, 0, 0, 0, err
+				if details < AccountDetailsTxHistory {
+					t, err := w.getEthereumToken(i+1, addrDesc, c.Contract, details, int(c.Txs))
+					if err != nil {
+						return nil, nil, nil, 0, 0, 0, err
+					}
+					tokens[j] = *t
 				}
-				tokens[j] = *t
 				j++
 			}
 			// special handling if filter has contract
 			// if the address has no transactions with given contract, check the balance, the address may have some balance even without transactions
 			if len(filterDesc) > 0 && j == 0 && details >= AccountDetailsTokens {
-				t, err := w.getEthereumToken(0, addrDesc, filterDesc, details, 0)
-				if err != nil {
-					return nil, nil, nil, 0, 0, 0, err
+				if details < AccountDetailsTxHistory {
+					t, err := w.getEthereumToken(0, addrDesc, filterDesc, details, 0)
+					if err != nil {
+						return nil, nil, nil, 0, 0, 0, err
+					}
+					tokens = []Token{*t}
 				}
-				tokens = []Token{*t}
 				// switch off query for transactions, there are no transactions
 				filter.Vout = AddressFilterVoutQueryNotNecessary
 			} else {
